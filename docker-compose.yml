@@ -1,0 +1,17 @@
+services:
+  wuv-admin:
+    build: .
+    container_name: wuv-admin
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      PORT: 3200
+      WUV_FLEET_KEY: ${WUV_FLEET_KEY}
+      WUV_ADMIN_TOKEN: ${WUV_ADMIN_TOKEN}
+      DB_PATH: /data/wuv-admin.db
+      VERSION_JSON_PATH: /iso/version.json
+      ISO_DIR: /iso
+    volumes:
+      - /opt/wuv-admin/data:/data
+      - /var/www/html/iso:/iso

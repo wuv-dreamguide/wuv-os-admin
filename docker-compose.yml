@@ -9,6 +9,7 @@ services:
       PORT: 3200
       WUV_FLEET_KEY: ${WUV_FLEET_KEY}
       WUV_ADMIN_TOKEN: ${WUV_ADMIN_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
       DB_PATH: /data/wuv-admin.db
       VERSION_JSON_PATH: /iso/version.json
       ISO_DIR: /iso

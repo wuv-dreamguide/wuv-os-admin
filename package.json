@@ -1,7 +1,7 @@
 {
   "name": "wuv-admin",
-  "version": "1.0.0",
-  "description": "WUV OS Admin API — fleet heartbeat, node registry, OTA management",
+  "version": "2.0.0",
+  "description": "WUV OS Admin API — multi-tenant fleet management, heartbeat, OTA",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,6 +10,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "better-sqlite3": "^9.4.3",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",

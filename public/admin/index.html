@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WUV Cloud — Super Admin</title>
+<link rel="icon" href="https://media.base44.com/images/public/69ce859e3045380652888101/c0440fa9a_TheArkofDreams44.png"/>
+<style>
+:root{--bg:#0d0d0f;--surface:#161618;--surface2:#1e1e22;--border:#2a2a30;--text:#f0f0f5;--muted:#888;--teal:#00e5c8;--pink:#ff3c8e;--yellow:#ffd600;--red:#ff4444;--green:#00c97a;--blue:#3d9fff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;display:flex;min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+button{cursor:pointer;border:none;font-size:13px;font-family:inherit;}
+
+/* Sidebar */
+#sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.logo{padding:20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.logo img{width:32px;height:32px;border-radius:6px;}
+.logo-text{font-weight:700;font-size:15px;line-height:1.2;}
+.logo-sub{color:var(--muted);font-size:11px;}
+nav{padding:12px 8px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--muted);cursor:pointer;margin-bottom:2px;transition:all .15s;}
+.nav-item:hover,.nav-item.active{background:var(--surface2);color:var(--text);}
+.nav-item.active{color:var(--teal);}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--pink);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;}
+
+/* Main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+#topbar h1{font-size:20px;font-weight:700;}
+.btn{padding:8px 16px;border-radius:8px;font-weight:600;transition:opacity .15s;}
+.btn:hover{opacity:.85;}
+.btn-teal{background:var(--teal);color:#000;}
+.btn-pink{background:var(--pink);color:#fff;}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+
+/* Content */
+#content{flex:1;overflow-y:auto;padding:24px;}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.stat-label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.stat-value{font-size:28px;font-weight:700;}
+.c-teal{color:var(--teal);}
+.c-pink{color:var(--pink);}
+.c-yellow{color:var(--yellow);}
+.c-red{color:var(--red);}
+.c-green{color:var(--green);}
+
+/* Table */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-weight:600;font-size:15px;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:10px 16px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+.badge-green{background:#00c97a22;color:var(--green);}
+.badge-red{background:#ff444422;color:var(--red);}
+.badge-yellow{background:#ffd60022;color:var(--yellow);}
+.badge-blue{background:#3d9fff22;color:var(--blue);}
+.badge-muted{background:#88888822;color:var(--muted);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:520px;max-width:95vw;max-height:85vh;overflow-y:auto;}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:16px;font-weight:700;}
+.modal-close{background:var(--surface2);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:18px;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+
+/* Form */
+.form-group{margin-bottom:16px;}
+label{display:block;margin-bottom:6px;color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* Fleet key box */
+.fk-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:12px;color:var(--teal);word-break:break-all;}
+
+.empty{text-align:center;padding:48px;color:var(--muted);}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+.dot-green{background:var(--green);}
+.dot-red{background:var(--red);}
+.dot-yellow{background:var(--yellow);}
+
+.tab-bar{display:flex;gap:4px;padding:0 20px;border-bottom:1px solid var(--border);}
+.tab{padding:12px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;font-weight:500;}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+
+#toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+#toast.show{opacity:1;}
+
+.section{display:none;}
+.section.active{display:block;}
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="logo">
+    <img src="https://media.base44.com/images/public/69ce859e3045380652888101/c0440fa9a_TheArkofDreams44.png"/>
+    <div>
+      <div class="logo-text">WUV Cloud</div>
+      <div class="logo-sub">Super Admin</div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-item active" onclick="showSection('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="showSection('orgs')"><span class="nav-icon">🏢</span>Organizations</div>
+    <div class="nav-item" onclick="showSection('nodes')"><span class="nav-icon">💻</span>All Devices</div>
+    <div class="nav-item" onclick="showSection('ota')"><span class="nav-icon">🚀</span>OTA Versions</div>
+  </nav>
+</div>
+
+<div id="main">
+  <div id="topbar">
+    <h1 id="page-title">Dashboard</h1>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost btn-sm" onclick="loadAll()">⟳ Refresh</button>
+      <button class="btn btn-teal btn-sm" onclick="openCreateOrg()">+ New Org</button>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- Dashboard -->
+    <div id="section-dashboard" class="section active">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Total Devices</div><div class="stat-value c-teal" id="s-total">—</div></div>
+        <div class="stat"><div class="stat-label">Online</div><div class="stat-value c-green" id="s-online">—</div></div>
+        <div class="stat"><div class="stat-label">Offline</div><div class="stat-value c-red" id="s-offline">—</div></div>
+        <div class="stat"><div class="stat-label">Organizations</div><div class="stat-value c-pink" id="s-orgs">—</div></div>
+        <div class="stat"><div class="stat-label">Need Update</div><div class="stat-value c-yellow" id="s-update">—</div></div>
+        <div class="stat"><div class="stat-label">Fleet Version</div><div class="stat-value" id="s-version" style="font-size:18px">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Recent Devices</span></div>
+        <table><thead><tr><th>Status</th><th>Hostname</th><th>Organization</th><th>Version</th><th>IP</th><th>Last Seen</th></tr></thead>
+        <tbody id="dash-nodes"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Organizations -->
+    <div id="section-orgs" class="section">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Organizations</span>
+          <button class="btn btn-teal btn-sm" onclick="openCreateOrg()">+ New Organization</button>
+        </div>
+        <table><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>License</th><th>Devices</th><th>Online</th><th>Created</th><th></th></tr></thead>
+        <tbody id="orgs-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- All Devices -->
+    <div id="section-nodes" class="section">
+      <div class="card">
+        <div class="card-header"><span class="card-title">All Devices</span></div>
+        <table><thead><tr><th>Status</th><th>Hostname</th><th>Machine ID</th><th>Org</th><th>Version</th><th>IP</th><th>Last Seen</th><th></th></tr></thead>
+        <tbody id="nodes-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- OTA -->
+    <div id="section-ota" class="section">
+      <div class="card">
+        <div class="card-header"><span class="card-title">OTA Versions</span></div>
+        <table><thead><tr><th>Filename</th><th>Size</th><th>Modified</th><th></th></tr></thead>
+        <tbody id="ota-table"></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Create Org Modal -->
+<div class="modal-overlay" id="modal-create-org">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Organization</span>
+      <button class="modal-close" onclick="closeModal('modal-create-org')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Organization Name</label><input id="org-name" placeholder="Springfield School"/></div>
+        <div class="form-group"><label>Type</label>
+          <select id="org-type"><option value="school">School</option><option value="refurbisher">Refurbisher</option><option value="business">Business</option><option value="internal">Internal</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Contact Name</label><input id="org-contact-name" placeholder="John Smith"/></div>
+        <div class="form-group"><label>Contact Email</label><input id="org-contact-email" placeholder="admin@school.edu"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>License Tier</label>
+          <select id="org-tier"><option value="free">Free</option><option value="starter" selected>Starter</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select>
+        </div>
+        <div class="form-group"><label>Device Limit</label><input id="org-device-limit" type="number" value="10"/></div>
+      </div>
+      <div class="form-group"><label>License Expiry (optional)</label><input id="org-expires" type="date"/></div>
+      <div class="form-group"><label>Notes</label><textarea id="org-notes" rows="2" placeholder="Internal notes..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-org')">Cancel</button>
+      <button class="btn btn-teal" onclick="createOrg()">Create Organization</button>
+    </div>
+  </div>
+</div>
+
+<!-- Org Detail Modal -->
+<div class="modal-overlay" id="modal-org-detail">
+  <div class="modal" style="width:720px;">
+    <div class="modal-header">
+      <span class="modal-title" id="org-detail-title">Organization</span>
+      <button class="modal-close" onclick="closeModal('modal-org-detail')">✕</button>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="orgTab('devices')">Devices</div>
+      <div class="tab" onclick="orgTab('fleet-keys')">Fleet Keys</div>
+      <div class="tab" onclick="orgTab('users')">Users</div>
+      <div class="tab" onclick="orgTab('license')">License</div>
+    </div>
+    <div class="modal-body">
+      <div id="org-tab-devices">
+        <table><thead><tr><th>Status</th><th>Hostname</th><th>Version</th><th>IP</th><th>Last Seen</th></tr></thead>
+        <tbody id="org-devices-table"></tbody></table>
+      </div>
+      <div id="org-tab-fleet-keys" style="display:none;">
+        <div style="margin-bottom:16px;display:flex;justify-content:flex-end;">
+          <button class="btn btn-teal btn-sm" onclick="addFleetKey()">+ New Fleet Key</button>
+        </div>
+        <div id="org-fk-list"></div>
+      </div>
+      <div id="org-tab-users" style="display:none;">
+        <div style="margin-bottom:16px;display:flex;justify-content:flex-end;">
+          <button class="btn btn-teal btn-sm" onclick="openAddUser()">+ Add User</button>
+        </div>
+        <table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Last Login</th><th></th></tr></thead>
+        <tbody id="org-users-table"></tbody></table>
+      </div>
+      <div id="org-tab-license" style="display:none;" id="org-license-info"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add Org User</span>
+      <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Full Name</label><input id="user-name" placeholder="Jane Smith"/></div>
+      <div class="form-group"><label>Email</label><input id="user-email" type="email" placeholder="jane@school.edu"/></div>
+      <div class="form-group"><label>Password</label><input id="user-pass" type="password" placeholder="Temporary password"/></div>
+      <div class="form-group"><label>Role</label><select id="user-role"><option value="admin">Admin</option><option value="viewer">Viewer</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-user')">Cancel</button>
+      <button class="btn btn-teal" onclick="addUser()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const ADMIN_TOKEN = '9a462e2345f2fc9ec6bb3a68c211ca01ca0e74a3e4d17b2adcecbc63bb200507';
+let allNodes = [], allOrgs = [], currentOrg = null, currentOrgTab = 'devices';
+let currentVersion = null;
+
+async function api(method, path, body) {
+  const res = await fetch(path, {
+    method, headers: {'Content-Type':'application/json','x-admin-token':ADMIN_TOKEN},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return res.json();
+}
+
+function toast(msg, color='var(--teal)') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.color = color;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item')[['dashboard','orgs','nodes','ota'].indexOf(id)].classList.add('active');
+  document.getElementById('page-title').textContent = {dashboard:'Dashboard',orgs:'Organizations',nodes:'All Devices',ota:'OTA Versions'}[id];
+}
+
+function timeSince(ts) {
+  if (!ts) return '—';
+  const d = (Date.now() - new Date(ts)) / 1000;
+  if (d < 60) return Math.round(d) + 's ago';
+  if (d < 3600) return Math.round(d/60) + 'm ago';
+  if (d < 86400) return Math.round(d/3600) + 'h ago';
+  return Math.round(d/86400) + 'd ago';
+}
+
+function statusBadge(s) {
+  const map = {active:'green',online:'green',offline:'red',suspended:'red',expired:'red',starter:'blue',pro:'teal',free:'muted',enterprise:'yellow'};
+  return `<span class="badge badge-${map[s]||'muted'}">${s}</span>`;
+}
+
+function dotStatus(s) {
+  return `<span class="dot dot-${s==='offline'?'red':s==='active'||s==='online'?'green':'yellow'}"></span>${s}`;
+}
+
+async function loadAll() {
+  const [nd, od, ota] = await Promise.all([
+    api('GET','/api/nodes'), api('GET','/api/orgs'), api('GET','/api/ota/current')
+  ]);
+  allNodes = nd.nodes || [];
+  allOrgs  = od.orgs  || [];
+  currentVersion = ota.version || null;
+  renderDashboard();
+  renderOrgs();
+  renderNodes();
+  loadOta();
+}
+
+function renderDashboard() {
+  const online  = allNodes.filter(n=>n.status!=='offline').length;
+  const offline = allNodes.filter(n=>n.status==='offline').length;
+  const needUpd = currentVersion ? allNodes.filter(n=>n.version&&n.version!==currentVersion).length : 0;
+  document.getElementById('s-total').textContent   = allNodes.length;
+  document.getElementById('s-online').textContent  = online;
+  document.getElementById('s-offline').textContent = offline;
+  document.getElementById('s-orgs').textContent    = allOrgs.length;
+  document.getElementById('s-update').textContent  = needUpd;
+  document.getElementById('s-version').textContent = currentVersion || '—';
+
+  const tbody = document.getElementById('dash-nodes');
+  if (!allNodes.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No devices registered yet</td></tr>'; return; }
+  tbody.innerHTML = allNodes.slice(0,10).map(n => {
+    const org = allOrgs.find(o=>o.id===n.org_id);
+    return `<tr>
+      <td>${dotStatus(n.status)}</td>
+      <td><strong>${n.hostname||'—'}</strong></td>
+      <td>${org?org.name:'<span style="color:var(--muted)">Unassigned</span>'}</td>
+      <td>${n.version?`<span style="color:${n.version===currentVersion?'var(--teal)':'var(--yellow)'}">${n.version}</span>`:'—'}</td>
+      <td style="color:var(--muted);font-size:12px">${n.ip_address||'—'}</td>
+      <td style="color:var(--muted)">${timeSince(n.last_seen)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderOrgs() {
+  const tbody = document.getElementById('orgs-table');
+  if (!allOrgs.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No organizations yet</td></tr>'; return; }
+  tbody.innerHTML = allOrgs.map(o => `<tr>
+    <td><strong>${o.name}</strong></td>
+    <td>${o.type}</td>
+    <td>${statusBadge(o.status)}</td>
+    <td>${statusBadge(o.tier||'—')}</td>
+    <td>${o.device_count||0} / ${o.license_device_limit||o.device_limit}</td>
+    <td><span style="color:var(--green)">${o.online_count||0}</span></td>
+    <td style="color:var(--muted)">${timeSince(o.created_at)}</td>
+    <td><button class="btn btn-ghost btn-sm" onclick="openOrg('${o.id}')">Manage</button></td>
+  </tr>`).join('');
+}
+
+function renderNodes() {
+  const tbody = document.getElementById('nodes-table');
+  if (!allNodes.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No devices registered</td></tr>'; return; }
+  tbody.innerHTML = allNodes.map(n => {
+    const org = allOrgs.find(o=>o.id===n.org_id);
+    return `<tr>
+      <td>${dotStatus(n.status)}</td>
+      <td><strong>${n.hostname||'—'}</strong></td>
+      <td style="font-family:monospace;font-size:12px;color:var(--muted)">${(n.machine_id||'').substring(0,16)}…</td>
+      <td>${org?`<span style="color:var(--teal)">${org.name}</span>`:'<span style="color:var(--muted)">Unassigned</span>'}</td>
+      <td>${n.version?`<span style="color:${n.version===currentVersion?'var(--teal)':'var(--yellow)'}">${n.version}</span>`:'—'}</td>
+      <td style="color:var(--muted);font-size:12px">${n.ip_address||'—'}</td>
+      <td style="color:var(--muted)">${timeSince(n.last_seen)}</td>
+      <td><button class="btn btn-red btn-sm" onclick="deleteNode('${n.id}')">Remove</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadOta() {
+  const data = await api('GET','/api/ota/versions');
+  const tbody = document.getElementById('ota-table');
+  const versions = data.versions || [];
+  if (!versions.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">No ISOs found</td></tr>'; return; }
+  tbody.innerHTML = versions.map(v => `<tr>
+    <td><strong>${v.filename}</strong></td>
+    <td style="color:var(--muted)">${(v.size/1e9).toFixed(2)} GB</td>
+    <td style="color:var(--muted)">${new Date(v.modified).toLocaleDateString()}</td>
+    <td><button class="btn btn-teal btn-sm" onclick="promoteVersion('${v.filename}')">Set Current</button></td>
+  </tr>`).join('');
+}
+
+async function promoteVersion(filename) {
+  const version = filename.replace('wuvos-','').replace('-x86_64.iso','');
+  const url = 'https://update.wuv.cloud/iso/' + filename;
+  await api('POST','/api/ota/promote',{version,url,channel:'stable'});
+  toast('Promoted ' + version + ' as current');
+  loadAll();
+}
+
+async function deleteNode(id) {
+  if (!confirm('Remove this device from the registry?')) return;
+  await api('DELETE','/api/nodes/'+id);
+  toast('Device removed');
+  loadAll();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openCreateOrg() { openModal('modal-create-org'); }
+
+async function createOrg() {
+  const name = document.getElementById('org-name').value.trim();
+  if (!name) { toast('Name required','var(--red)'); return; }
+  const body = {
+    name, type: document.getElementById('org-type').value,
+    contact_name: document.getElementById('org-contact-name').value,
+    contact_email: document.getElementById('org-contact-email').value,
+    license_tier: document.getElementById('org-tier').value,
+    device_limit: parseInt(document.getElementById('org-device-limit').value)||10,
+    license_expires_at: document.getElementById('org-expires').value||null,
+    notes: document.getElementById('org-notes').value,
+  };
+  const res = await api('POST','/api/orgs',body);
+  if (res.org) {
+    closeModal('modal-create-org');
+    toast('Organization created! Fleet key: ' + res.fleet_key.substring(0,20)+'...');
+    loadAll();
+  } else { toast(res.error||'Error','var(--red)'); }
+}
+
+async function openOrg(orgId) {
+  currentOrg = orgId;
+  const data = await api('GET','/api/orgs/'+orgId);
+  const org  = data.org;
+  document.getElementById('org-detail-title').textContent = org.name;
+
+  // Devices tab
+  const devBody = document.getElementById('org-devices-table');
+  if (!data.devices||!data.devices.length) {
+    devBody.innerHTML = '<tr><td colspan="5" class="empty">No devices registered for this org</td></tr>';
+  } else {
+    devBody.innerHTML = data.devices.map(n=>`<tr>
+      <td>${dotStatus(n.status)}</td><td><strong>${n.hostname||'—'}</strong></td>
+      <td style="color:${n.version===currentVersion?'var(--teal)':'var(--yellow)'}">${n.version||'—'}</td>
+      <td style="color:var(--muted);font-size:12px">${n.ip_address||'—'}</td>
+      <td style="color:var(--muted)">${timeSince(n.last_seen)}</td>
+    </tr>`).join('');
+  }
+
+  // Fleet keys tab
+  const fkList = document.getElementById('org-fk-list');
+  fkList.innerHTML = (data.fleet_keys||[]).map(k=>`
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>${k.label||'Fleet Key'}</strong>
+        <button class="btn btn-red btn-sm" onclick="deleteFleetKey('${k.id}')">Remove</button>
+      </div>
+      <div class="fk-box">${k.key_value}</div>
+    </div>
+  `).join('') || '<div class="empty">No fleet keys</div>';
+
+  // Users tab
+  const usersBody = document.getElementById('org-users-table');
+  usersBody.innerHTML = (data.users||[]).map(u=>`<tr>
+    <td>${u.email}</td><td>${u.full_name||'—'}</td>
+    <td>${statusBadge(u.role)}</td>
+    <td style="color:var(--muted)">${timeSince(u.last_login)||'Never'}</td>
+    <td><button class="btn btn-red btn-sm" onclick="deleteUser('${u.id}')">Remove</button></td>
+  </tr>`).join('') || '<tr><td colspan="5" class="empty">No users</td></tr>';
+
+  // License tab
+  document.getElementById('org-tab-license').innerHTML = (data.licenses||[]).map(l=>`
+    <div class="stat" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><strong>${l.tier} license</strong>${statusBadge(l.status)}</div>
+      <div style="color:var(--muted);font-size:13px;">Device limit: ${l.device_limit} | Expires: ${l.expires_at?new Date(l.expires_at).toLocaleDateString():'Never'}</div>
+    </div>
+  `).join('') || '<div class="empty">No licenses</div>';
+
+  orgTab('devices');
+  openModal('modal-org-detail');
+}
+
+function orgTab(tab) {
+  currentOrgTab = tab;
+  const tabs = ['devices','fleet-keys','users','license'];
+  tabs.forEach(t => {
+    document.getElementById('org-tab-'+t).style.display = t===tab?'block':'none';
+    document.querySelectorAll('.tab')[tabs.indexOf(t)].classList.toggle('active',t===tab);
+  });
+}
+
+async function addFleetKey() {
+  const label = prompt('Fleet key label (e.g. "Batch A - MacBooks")');
+  if (!label) return;
+  const res = await api('POST','/api/orgs/'+currentOrg+'/fleet-keys',{label});
+  if (res.key_value) { toast('Fleet key created'); openOrg(currentOrg); }
+  else toast(res.error||'Error','var(--red)');
+}
+
+async function deleteFleetKey(id) {
+  if (!confirm('Delete this fleet key? Devices using it will not be able to check in.')) return;
+  await api('DELETE','/api/orgs/'+currentOrg+'/fleet-keys/'+id);
+  toast('Fleet key removed'); openOrg(currentOrg);
+}
+
+function openAddUser() { openModal('modal-add-user'); }
+
+async function addUser() {
+  const body = {
+    full_name: document.getElementById('user-name').value,
+    email: document.getElementById('user-email').value,
+    password: document.getElementById('user-pass').value,
+    role: document.getElementById('user-role').value,
+  };
+  if (!body.email||!body.password) { toast('Email and password required','var(--red)'); return; }
+  const res = await api('POST','/api/orgs/'+currentOrg+'/users',body);
+  if (res.ok) { closeModal('modal-add-user'); toast('User added'); openOrg(currentOrg); }
+  else toast(res.error||'Error','var(--red)');
+}
+
+async function deleteUser(id) {
+  if (!confirm('Remove this user?')) return;
+  await api('DELETE','/api/orgs/'+currentOrg+'/users/'+id);
+  toast('User removed'); openOrg(currentOrg);
+}
+
+document.addEventListener('DOMContentLoaded', loadAll);
+setInterval(loadAll, 30000);
+</script>
+</body>
+</html>

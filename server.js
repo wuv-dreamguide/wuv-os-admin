@@ -1,7 +1,6 @@
 /**
- * WUV Admin API Server
- * Fleet heartbeats, node registry, OTA management
- * Hosted at admin.wuv.cloud on port 3200 (127.0.0.1 only — behind nginx)
+ * WUV Admin API Server v2.0
+ * Multi-tenant fleet management — organizations, licenses, devices
  */
 
 'use strict';
@@ -15,17 +14,18 @@ const db              = require('./db');
 const heartbeatRouter = require('./routes/heartbeat');
 const nodesRouter     = require('./routes/nodes');
 const otaRouter       = require('./routes/ota');
-const authMiddleware  = require('./middleware/auth');
+const orgsRouter      = require('./routes/orgs');
+const authRouter      = require('./routes/auth');
+const { requireSuperAdmin } = require('./middleware/auth');
 
 const app  = express();
 const PORT = process.env.PORT || 3200;
 
-// ── Security headers (CSP relaxed for dashboard) ─────────────
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc:  ["'self'", "'unsafe-inline'"],  // inline scripts in dashboard
+      scriptSrc:  ["'self'", "'unsafe-inline'"],
       styleSrc:   ["'self'", "'unsafe-inline'"],
       imgSrc:     ["'self'", 'data:', 'https://media.base44.com'],
       connectSrc: ["'self'"],
@@ -36,10 +36,11 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// ── CORS — locked to admin domain only ───────────────────────
 const ALLOWED_ORIGINS = [
   'https://admin.wuv.cloud',
+  'https://fleet.wuv.cloud',
 ];
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
@@ -47,7 +48,7 @@ app.use((req, res, next) => {
     res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-token, x-fleet-key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-token, x-fleet-key, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -55,36 +56,40 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '64kb' }));
 app.use(morgan('combined', { stream: { write: msg => process.stdout.write(msg) } }));
 
-// ── Static dashboard (served from /public) ───────────────────
-app.use(express.static(path.join(__dirname, 'public')));
+// Static — super admin dashboard
+app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
+// Static — org fleet portal
+app.use('/fleet', express.static(path.join(__dirname, 'public/fleet')));
+// Root serves admin
+app.use(express.static(path.join(__dirname, 'public/admin')));
 
-// ── Health check (no auth) ────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'wuv-admin', ts: new Date().toISOString() });
-});
+// Health
+app.get('/health', (req, res) => res.json({ status: 'ok', service: 'wuv-admin', version: '2.0.0', ts: new Date().toISOString() }));
 
-// ── Fleet heartbeat (fleet-key auth) ─────────────────────────
+// Fleet heartbeat (fleet-key auth)
 app.use('/api/heartbeat', heartbeatRouter);
+app.use('/api/register',  heartbeatRouter);
 
-// ── Admin API (admin-token auth) ──────────────────────────────
-app.use('/api/nodes', authMiddleware, nodesRouter);
-app.use('/api/ota',   authMiddleware, otaRouter);
+// Auth (org users)
+app.use('/auth', authRouter);
 
-// ── SPA fallback — serve dashboard for any non-API route ─────
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Super admin — nodes & OTA
+app.use('/api/nodes', requireSuperAdmin, nodesRouter);
+app.use('/api/ota',   requireSuperAdmin, otaRouter);
 
-// ── Error handler ─────────────────────────────────────────────
+// Orgs (super admin full, org admin own org)
+app.use('/api/orgs', orgsRouter);
+
+// SPA fallback
+app.get('/fleet/*', (req, res) => res.sendFile(path.join(__dirname, 'public/fleet/index.html')));
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public/admin/index.html')));
+
 app.use((err, req, res, _next) => {
   console.error('[error]', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// ── Start ─────────────────────────────────────────────────────
 db.init();
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`[wuv-admin] Listening on 127.0.0.1:${PORT}`);
-});
+app.listen(PORT, '127.0.0.1', () => console.log(`[wuv-admin] v2.0 on 127.0.0.1:${PORT}`));
 
 module.exports = app;
